@@ -1,22 +1,35 @@
 const superagent = require('superagent');
-
-function imprimirMuseos(error, respuesta) {
-  if (error) {
-    throw new Error('algo se rompió', error);
+const fs = require('fs');
+function guardarEnArchivo(error, resultado, ){
+  if (error){
+    throw new Error('ocurrio un error, algo se jodio')
   }
-
-  const cantidad = respuesta.body.count;
-  const museos = respuesta.body.results;
-
-  console.log(`Se encontraron ${cantidad} museos.`);
-  console.log(`El primer museo se llama ${museos[0].nombre}.`)
+  
+  fs.writeFile('museos.txt', resultado.body.count, terminar);
 }
-
-console.log('Antes de llamar a superagent')
-
-superagent
+function spAgent(next){
+  superagent
   .get('https://www.cultura.gob.ar/api/v2.0/museos')
   .query({ format: 'json' })
-  .end(imprimirMuseos)
-
-console.log('Después de llamar a superagent')
+  .end(next)
+}
+function terminar(error){
+  console.log('programa terminado, archivo grabado\n')
+}
+function organismos(next){
+  superagent
+  .get('https://www.cultura.gob.ar/api/v2.0/organismos')
+  .query({ format: 'json' })
+  .end(next)
+}
+function guardarEnArchivoOrganismo(error, resultado){
+  if (error){
+    throw new Error('ocurrio un error, algo se jodio')
+  }
+  const organismos = resultado.body.results
+  for(let i = 0;i<organismos.length;i++){
+    fs.appendFile('organismos.txt', '{'+organismos[i].nombre +'-'+ organismos[i].direccion +'\n Por cualquier consulta comunicarse al '+organismos[i].telefono +'}' + '\n\n', terminar);
+  }
+}
+// spAgent(guardarEnArchivo)
+organismos(guardarEnArchivoOrganismo)
